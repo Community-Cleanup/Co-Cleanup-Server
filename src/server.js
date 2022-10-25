@@ -48,6 +48,19 @@ var corsOptions = {
 // Apply the CORS middleware to all incoming requests
 app.use(cors(corsOptions));
 
+// Load up the .env file and store its values into process.env
+require("dotenv").config();
+
+// Establish Firebase and give it valid admin credentials
+const firebaseAdmin = require("firebase-admin");
+firebaseAdmin.initializeApp({
+  credential: firebaseAdmin.credential.cert({
+    projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
+    privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY.replace(/\\n/g, "\n"), // Remove breaking line-breaks
+    clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+  }),
+});
+
 // The server's home route
 // Useful for checking that the server is running as expected in local and deployed environments
 app.get("/", (req, res) => {
