@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --detectOpenHandles",
+    "test-ci": "jest --detectOpenHandles --ci",
+    "start-production": "NODE_ENV=production node ./src/index.js",
+    "start-dev-win": "PORT=55000 NODE_ENV=development nodemon -L ./src/index.js",
+    "start-dev": "PORT=55000 NODE_ENV=development nodemon ./src/index.js"
   },
   "repository": {
     "type": "git",
@@ -16,5 +20,13 @@
   "bugs": {
     "url": "https://github.com/Community-Cleanup/Co-Cleanup-Server/issues"
   },
-  "homepage": "https://github.com/Community-Cleanup/Co-Cleanup-Server#readme"
+  "homepage": "https://github.com/Community-Cleanup/Co-Cleanup-Server#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "helmet": "^6.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
 }
