@@ -7,6 +7,8 @@ const cors = require("cors");
 // Dependency 'helmet', is Express middleware that will assist with further security by the setting of various HTTP headers
 const helmet = require("helmet");
 
+
+
 // Set values for the server's address
 const PORT = process.env.PORT || 0;
 const HOST = "0.0.0.0";
@@ -63,6 +65,7 @@ firebaseAdmin.initializeApp({
 
 // The server's home route
 // Useful for checking that the server is running as expected in local and deployed environments
+// This "/" route is just for our testing purposes only
 app.get("/", (req, res) => {
   console.log("ExpressJS API homepage received a request.");
 
@@ -72,6 +75,16 @@ app.get("/", (req, res) => {
     message: `Hello ${target} world!`,
   });
 });
+
+const userRouter = require('./User/UserRoutes');
+// Using express.Router, All "users" API end-points,
+// will start from /api/users/
+// e.g.
+// POST http://localhost:55000/api/users/sign-up
+// POST http://localhost:55000/api/users/sign-in
+// POST http://localhost:55000/api/users/validate-session
+app.use('/api/users', userRouter);
+
 
 // Export our 'app' Express entity/server, the associated PORT and HOST,
 // all primarily for our ./index.js to start/boot the Express server.

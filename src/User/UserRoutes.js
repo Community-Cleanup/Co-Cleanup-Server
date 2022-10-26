@@ -2,11 +2,6 @@
 // Link Alex's Masterclass tutorial is: https://github.com/AlexHolderDeveloper/expressjs-class-oct-22
 const express = require("express");
 
-// The Express router provides router-level middleware so that we can
-// define middleware specifically for all routes from the /user URL in this case
-// Keeps things tidy by keeping router level functionality outside of ../index.js
-const routes = express.Router();
-
 // functions imported from ./UserFunctions.js
 const {
   signUpUser,
@@ -14,8 +9,17 @@ const {
   validateUserSession,
 } = require("./UserFunctions");
 
+// The Express router provides router-level middleware so that we can
+// define middleware specifically for all routes from the /user URL in this case
+// Keeps things tidy by keeping router level functionality outside of ../index.js
+const router = express.Router();
+
+router.get("/", async (request, response) => {
+  response.json({"message": "Hello /users route"});
+})
+
 // Create a user, a session token & a refresh token
-routes.post("/sign-up", async (request, response) => {
+router.post("/sign-up", async (request, response) => {
     // request data formatted ready for input into signUpUser function
   let newUserDetails = {
     email: request.body.email,
@@ -60,7 +64,7 @@ routes.post("/sign-up", async (request, response) => {
 });
 
 // Create a session token & refresh token
-routes.post("/sign-in", async (request, response) => {
+router.post("/sign-in", async (request, response) => {
   // Process posted form/json data
   let userDetails = {
     email: request.body.email,
@@ -92,7 +96,7 @@ routes.post("/sign-in", async (request, response) => {
 });
 
 // Create a session token & refresh token
-routes.post("/validate-session", async (request, response) => {
+router.post("/validate-session", async (request, response) => {
   // Process posted form/json data
   let sessionDetails = {
     idToken: request.body.idToken,
@@ -109,4 +113,4 @@ routes.post("/validate-session", async (request, response) => {
   response.json(validationResult);
 });
 
-module.exports = routes;
+module.exports = router;
