@@ -7,8 +7,6 @@ const cors = require("cors");
 // Dependency 'helmet', is Express middleware that will assist with further security by the setting of various HTTP headers
 const helmet = require("helmet");
 
-
-
 // Set values for the server's address
 const PORT = process.env.PORT || 0;
 const HOST = "0.0.0.0";
@@ -44,7 +42,7 @@ app.use(express.urlencoded({ extended: true }));
 // that will be the only client origins allowed to access this server
 // In our case, both our localhost (dev) ReactJS client, and our production deployed ReactJS app.
 var corsOptions = {
-  origin: ["http://localhost:3000", "https://deployedApp.com"],
+  origin: ["http://localhost:3000", "https://cocleanup.netlify.app"],
   optionsSuccessStatus: 200,
 };
 // Apply the CORS middleware to all incoming requests
@@ -64,20 +62,23 @@ firebaseAdmin.initializeApp({
 });
 
 // Import the database connection function
-const { databaseConnector } = require('./database');
+const { databaseConnector } = require("./database");
 // If we're not in test mode, start connecting to the database.
 if (process.env.NODE_ENV != "test") {
-	// Establish what the database URL is going to be
-	const DATABASE_URI = process.env.DATABASE_URI || 'mongodb://localhost:27017/CoCleanup';
-	// Connect to the database using the URL
-	databaseConnector(DATABASE_URI).then(() => {
-		console.log("Database connected successfully!");
-	}).catch(error => {
-		console.log(`
+  // Establish what the database URL is going to be
+  const DATABASE_URI =
+    process.env.DATABASE_URI || "mongodb://localhost:27017/CoCleanup";
+  // Connect to the database using the URL
+  databaseConnector(DATABASE_URI)
+    .then(() => {
+      console.log("Database connected successfully!");
+    })
+    .catch((error) => {
+      console.log(`
 		Some error occured connecting to the database! It was: 
 		${error}
-		`)
-	});
+		`);
+    });
 }
 
 // The server's home route
@@ -93,18 +94,17 @@ app.get("/", (req, res) => {
   });
 });
 
-const userRouter = require('./User/UserRoutes');
+const userRouter = require("./User/UserRoutes");
 // Using express.Router, All "users" API end-points,
 // will start from /api/users/
 // e.g.
 // POST http://localhost:55000/api/users/sign-up
 // POST http://localhost:55000/api/users/sign-in
 // POST http://localhost:55000/api/users/validate-session
-app.use('/api/users', userRouter);
+app.use("/api/users", userRouter);
 
-const eventRouter = require('./Event/EventRoutes');
-app.use('/api/events', eventRouter);
-
+const eventRouter = require("./Event/EventRoutes");
+app.use("/api/events", eventRouter);
 
 // Export our 'app' Express entity/server, the associated PORT and HOST,
 // all primarily for our ./index.js to start/boot the Express server.
