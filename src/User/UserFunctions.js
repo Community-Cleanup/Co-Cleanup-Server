@@ -4,6 +4,8 @@
 // The Admin SDK is a set of server libraries that let you interact with Firebase from root level environments
 const firebaseAdmin = require("firebase-admin");
 
+const UserModel = require("../Database/Models/userSchema");
+
 // Set up the Firebase Client SDK
 const { firebaseClientConfig } = require("../../keys/firebaseClientKey");
 const firebaseClient = require("firebase/app");
@@ -11,6 +13,33 @@ const firebaseClient = require("firebase/app");
 const { getAuth, signInWithEmailAndPassword } = require("firebase/auth");
 // Initialize the Firebase Client SDK
 firebaseClient.initializeApp(firebaseClientConfig);
+
+async function findOrCreateUser(req, res, next) {
+  console.log("REQ HEADERS TOKEN", req.headers.authorization);
+  try {
+    // verifyIdToken will decode the token's claims is the promise is successful
+    const firebaseUser = await firebaseAdmin
+      .auth()
+      .verifyIdToken(req.headers.authorization);
+    const user = await UserModel.findOne({ email: firebaseUser.email });
+    if (user) {
+      res.status(200).json(user);
+      next();
+    } else {
+      let newUser = await new UserModel({
+        email: firebaseUser.email,
+        username: req.body.username,
+      }).save();
+      res.status(200).json(newUser);
+      next();
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(401).json({
+      err: "Possibly invalid or expired token",
+    });
+  }
+}
 
 async function signUpUser(userDetails) {
   // Use the Firebase Admin SDK to create the user
@@ -114,6 +143,7 @@ async function validateUserSession(sessionDetails) {
 }
 
 module.exports = {
+  findOrCreateUser,
   signUpUser,
   signInUser,
   validateUserSession,

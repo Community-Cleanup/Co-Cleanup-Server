@@ -2,8 +2,11 @@
 // Link Alex's Masterclass tutorial is: https://github.com/AlexHolderDeveloper/expressjs-class-oct-22
 const express = require("express");
 
+const UserModel = require("../Database/Models/userSchema");
+
 // functions imported from ./UserFunctions.js
 const {
+  findOrCreateUser,
   signUpUser,
   signInUser,
   validateUserSession,
@@ -15,12 +18,14 @@ const {
 const router = express.Router();
 
 router.get("/", async (request, response) => {
-  response.json({"message": "Hello /users route"});
-})
+  response.json({ message: "Hello /users route" });
+});
+
+router.post("/current-user", findOrCreateUser);
 
 // Create a user, a session token & a refresh token
 router.post("/sign-up", async (request, response) => {
-    // request data formatted ready for input into signUpUser function
+  // request data formatted ready for input into signUpUser function
   let newUserDetails = {
     email: request.body.email,
     password: request.body.password,
