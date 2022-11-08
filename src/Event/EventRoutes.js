@@ -1,12 +1,12 @@
 const router = require("express").Router();
 const EventModel = require("../Database/Models/eventSchema");
 
-router.post("/add-event", async (req, res) => {
+router.post("/create-event", async (req, res) => {
   try {
     const newEvent = EventModel({
       title: req.body.title,
       description: req.body.description,
-      startDate: req.body.startDate,
+      date: req.body.date,
       address: req.body.address,
       coordinates: req.body.coordinates,
       user: req.body.userId,

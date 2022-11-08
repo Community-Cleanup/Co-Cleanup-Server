@@ -7,7 +7,7 @@ const eventSchema = new mongoose.Schema({
     required: true,
   },
   description: String,
-  startDate: Number,
+  date: Number,
   address: String,
   coordinates: Array,
   user: String,
