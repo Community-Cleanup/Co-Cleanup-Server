@@ -14,8 +14,32 @@ const { getAuth, signInWithEmailAndPassword } = require("firebase/auth");
 // Initialize the Firebase Client SDK
 firebaseClient.initializeApp(firebaseClientConfig);
 
-async function findOrCreateUser(req, res, next) {
-  console.log("REQ HEADERS TOKEN", req.headers.authorization);
+async function createUser(req, res, next) {
+  console.log("Token in header used to Sign Up: ", req.headers.authorization);
+  try {
+    // verifyIdToken will decode the token's claims is the promise is successful
+    const firebaseUser = await firebaseAdmin
+      .auth()
+      .verifyIdToken(req.headers.authorization);
+
+    firebaseUser.email_verified = true;
+    let newUser = await new UserModel({
+      email: firebaseUser.email,
+      username: req.body.username,
+      isAdmin: false,
+    }).save();
+    res.status(200).json(newUser);
+    next();
+  } catch (error) {
+    console.log(error);
+    res.status(401).json({
+      err: "Possibly invalid or expired token",
+    });
+  }
+}
+
+async function findCurrentUser(req, res, next) {
+  console.log("Token in header used to Sign In: ", req.headers.authorization);
   try {
     // verifyIdToken will decode the token's claims is the promise is successful
     const firebaseUser = await firebaseAdmin
@@ -24,15 +48,8 @@ async function findOrCreateUser(req, res, next) {
     const user = await UserModel.findOne({ email: firebaseUser.email });
     if (user) {
       res.status(200).json(user);
-      next();
-    } else {
-      let newUser = await new UserModel({
-        email: firebaseUser.email,
-        username: req.body.username,
-      }).save();
-      res.status(200).json(newUser);
-      next();
     }
+    next();
   } catch (error) {
     console.log(error);
     res.status(401).json({
@@ -143,7 +160,8 @@ async function validateUserSession(sessionDetails) {
 }
 
 module.exports = {
-  findOrCreateUser,
+  createUser,
+  findCurrentUser,
   signUpUser,
   signInUser,
   validateUserSession,

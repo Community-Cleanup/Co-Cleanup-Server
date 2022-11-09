@@ -6,7 +6,8 @@ const UserModel = require("../Database/Models/userSchema");
 
 // functions imported from ./UserFunctions.js
 const {
-  findOrCreateUser,
+  createUser,
+  findCurrentUser,
   signUpUser,
   signInUser,
   validateUserSession,
@@ -21,7 +22,8 @@ router.get("/", async (request, response) => {
   response.json({ message: "Hello /users route" });
 });
 
-router.post("/current-user", findOrCreateUser);
+router.post("/create-current-user", createUser);
+router.post("/find-current-user", findCurrentUser);
 
 // Create a user, a session token & a refresh token
 router.post("/sign-up", async (request, response) => {
