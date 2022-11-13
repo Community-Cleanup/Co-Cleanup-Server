@@ -15,10 +15,6 @@ const { getAuth, signInWithEmailAndPassword } = require("firebase/auth");
 firebaseClient.initializeApp(firebaseClientConfig);
 
 async function createUser(req, res, next) {
-  console.log(
-    "Token in header used to Sign Up: ",
-    req.headers.authorization.split(" ")[1]
-  );
   try {
     // verifyIdToken will decode the token's claims is the promise is successful
     const firebaseUser = await firebaseAdmin
@@ -35,17 +31,13 @@ async function createUser(req, res, next) {
     next();
   } catch (error) {
     console.log(error);
-    res.status(401).json({
-      err: "Possibly invalid or expired token",
+    return res.status(401).json({
+      error: "Unauthorized",
     });
   }
 }
 
 async function findCurrentUser(req, res, next) {
-  console.log(
-    "Token in header used to Sign In: ",
-    req.headers.authorization.split(" ")[1]
-  );
   try {
     // verifyIdToken will decode the token's claims is the promise is successful
     const firebaseUser = await firebaseAdmin
@@ -58,8 +50,8 @@ async function findCurrentUser(req, res, next) {
     next();
   } catch (error) {
     console.log(error);
-    res.status(401).json({
-      err: "Possibly invalid or expired token",
+    return res.status(401).json({
+      error: "Unauthorized",
     });
   }
 }
