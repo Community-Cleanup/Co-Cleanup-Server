@@ -1,21 +1,33 @@
 const router = require("express").Router();
 const EventModel = require("../Database/Models/eventSchema");
 
+const { validateUserSession } = require("../User/UserFunctions");
+
 router.post("/create-event", async (req, res) => {
-  try {
-    const newEvent = EventModel({
-      title: req.body.title,
-      description: req.body.description,
-      date: req.body.date,
-      address: req.body.address,
-      coordinates: req.body.coordinates,
-      user: req.body.userId,
-    });
-    const saveEvent = await newEvent.save();
-    res.status(200).json(saveEvent);
-  } catch (err) {
-    console.log("An error occured:", err);
-    res.json(err);
+  // Protected route: only signed in users should be able to create an event.
+  // To do that, validate the token (if it exists) from the header in our 'validateUserSession' function,
+  // and if that succeeds, only then create an event
+  if (
+    req.headers.authorization &&
+    (await validateUserSession(req.headers.authorization))
+  ) {
+    try {
+      const newEvent = EventModel({
+        title: req.body.title,
+        description: req.body.description,
+        date: req.body.date,
+        address: req.body.address,
+        coordinates: req.body.coordinates,
+        user: req.body.userId,
+      });
+      const saveEvent = await newEvent.save();
+      res.status(200).json(saveEvent);
+    } catch (err) {
+      console.log("An error occured:", err);
+      res.json(err);
+    }
+  } else {
+    res.status(401).json({ error: "Unauthorized" });
   }
 });
 

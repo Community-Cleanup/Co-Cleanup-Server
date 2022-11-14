@@ -7,20 +7,21 @@ const firebaseAdmin = require("firebase-admin");
 const UserModel = require("../Database/Models/userSchema");
 
 // Set up the Firebase Client SDK
-const { firebaseClientConfig } = require("../../keys/firebaseClientKey");
-const firebaseClient = require("firebase/app");
+//const { firebaseClientConfig } = require("../../keys/firebaseClientKey");
+//const firebaseClient = require("firebase/app");
 // Adding the Firebase products that will be used
-const { getAuth, signInWithEmailAndPassword } = require("firebase/auth");
+//const { getAuth, signInWithEmailAndPassword } = require("firebase/auth");
 // Initialize the Firebase Client SDK
-firebaseClient.initializeApp(firebaseClientConfig);
+//firebaseClient.initializeApp(firebaseClientConfig);
 
 async function createUser(req, res, next) {
-  console.log("Token in header used to Sign Up: ", req.headers.authorization);
   try {
+    // The authorization header will be in the format of string "Bearer [id token]",
+    // so split out the ID token from the word "Bearer"
+    const token = req.headers.authorization.split(" ")[1];
+
     // verifyIdToken will decode the token's claims is the promise is successful
-    const firebaseUser = await firebaseAdmin
-      .auth()
-      .verifyIdToken(req.headers.authorization);
+    const firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
 
     firebaseUser.email_verified = true;
     let newUser = await new UserModel({
@@ -32,29 +33,68 @@ async function createUser(req, res, next) {
     next();
   } catch (error) {
     console.log(error);
-    res.status(401).json({
-      err: "Possibly invalid or expired token",
+    return res.status(401).json({
+      error: "Unauthorized",
     });
   }
 }
 
 async function findCurrentUser(req, res, next) {
-  console.log("Token in header used to Sign In: ", req.headers.authorization);
   try {
+    // The authorization header will be in the format of string "Bearer [id token]",
+    // so split out the ID token from the word "Bearer"
+    const token = req.headers.authorization.split(" ")[1];
+
     // verifyIdToken will decode the token's claims is the promise is successful
-    const firebaseUser = await firebaseAdmin
-      .auth()
-      .verifyIdToken(req.headers.authorization);
+    const firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
     const user = await UserModel.findOne({ email: firebaseUser.email });
     if (user) {
       res.status(200).json(user);
     }
     next();
   } catch (error) {
-    console.log(error);
+    if (error.code == "auth/id-token-revoked") {
+      console.log(
+        "Error: You must sign in again to access this. Full error is: \n" +
+          error
+      );
+    } else {
+      console.log("Error: Session token is invalid. Full error is: \n" + error);
+    }
     res.status(401).json({
-      err: "Possibly invalid or expired token",
+      error: "Unauthorized",
     });
+  }
+}
+
+async function validateUserSession(headerToken) {
+  try {
+    // The authorization header will be in the format of string "Bearer [id token]",
+    // so split out the ID token from the word "Bearer"
+    const token = headerToken.split(" ")[1];
+
+    // verifyIdToken will decode the token's claims is the promise is successful
+    const firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
+    const user = await UserModel.findOne({ email: firebaseUser.email });
+    if (user) {
+      return true;
+    } else {
+      console.log(
+        "Error: User was not found in MongoDB. Full Firebase user object: \n" +
+          firebaseUser
+      );
+      return false;
+    }
+  } catch (error) {
+    if (error.code == "auth/id-token-revoked") {
+      console.log(
+        "Error: You must sign in again to access this. Full error is: \n" +
+          error
+      );
+    } else {
+      console.log("Error: Session token is invalid. Full error is: \n" + error);
+    }
+    return false;
   }
 }
 
@@ -164,5 +204,5 @@ module.exports = {
   findCurrentUser,
   // signUpUser,
   // signInUser,
-  //validateUserSession,
+  validateUserSession,
 };
