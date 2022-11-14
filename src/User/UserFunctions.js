@@ -56,6 +56,34 @@ async function findCurrentUser(req, res, next) {
   }
 }
 
+async function validateUserSession(headerToken) {
+  const token = headerToken.split(" ")[1];
+
+  try {
+    const firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
+    const user = await UserModel.findOne({ email: firebaseUser.email });
+    if (user) {
+      return true;
+    } else {
+      console.log(
+        "Error: User was not found in MongoDB. Full Firebase user object: \n" +
+          firebaseUser
+      );
+      return false;
+    }
+  } catch (error) {
+    if (error.code == "auth/id-token-revoked") {
+      console.log(
+        "Error: You must sign in again to access this. Full error is: \n" +
+          error
+      );
+    } else {
+      console.log("Error: Session token is invalid. Full error is: \n" + error);
+    }
+    return false;
+  }
+}
+
 // async function signUpUser(userDetails) {
 //   // Use the Firebase Admin SDK to create the user
 //   return firebaseAdmin
@@ -162,5 +190,5 @@ module.exports = {
   findCurrentUser,
   // signUpUser,
   // signInUser,
-  //validateUserSession,
+  validateUserSession,
 };
