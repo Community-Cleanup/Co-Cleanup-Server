@@ -57,6 +57,8 @@ async function findCurrentUser(req, res, next) {
 }
 
 async function validateUserSession(headerToken) {
+  // The authorization header will be in the format of string "Bearer [id token]",
+  // so split out the ID token from the word "Bearer"
   const token = headerToken.split(" ")[1];
 
   try {
