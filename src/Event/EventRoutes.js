@@ -1,10 +1,16 @@
 const router = require("express").Router();
 const EventModel = require("../Database/Models/eventSchema");
 
+const { validateUserSession } = require("../User/UserFunctions");
+
 router.post("/create-event", async (req, res) => {
-  // Protected route: only signed in users should be able to create an event,
-  // so check if the ID token exists before creating an event
-  if (req.headers.authorization) {
+  // Protected route: only signed in users should be able to create an event.
+  // To do that, validate the token (if it exists) from the header in our 'validateUserSession' function,
+  // and if that succeeds, only then create an event
+  if (
+    req.headers.authorization &&
+    (await validateUserSession(req.headers.authorization))
+  ) {
     try {
       const newEvent = EventModel({
         title: req.body.title,
