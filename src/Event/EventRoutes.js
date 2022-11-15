@@ -18,7 +18,10 @@ router.post("/create-event", async (req, res) => {
         date: req.body.date,
         address: req.body.address,
         coordinates: req.body.coordinates,
-        user: req.body.userId,
+        username: req.body.username,
+        userId: req.body.userId,
+        attendees: req.body.attendees,
+        comments: req.body.comments,
       });
       const saveEvent = await newEvent.save();
       res.status(200).json(saveEvent);
