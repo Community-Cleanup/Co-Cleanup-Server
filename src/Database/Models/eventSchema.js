@@ -1,17 +1,23 @@
 const mongoose = require("mongoose");
 
 // Schema to structure the data
-const eventSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
+const eventSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
+    description: String,
+    date: Number,
+    address: String,
+    coordinates: Array,
+    username: String,
+    userId: String,
+    attendees: Array,
+    comments: Array,
   },
-  description: String,
-  date: Number,
-  address: String,
-  coordinates: Array,
-  user: String,
-});
+  { timestamps: true }
+);
 
 // const EventModel = mongoose.model("Event", eventSchema);
 // module.exports = { EventModel };
