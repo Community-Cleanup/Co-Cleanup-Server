@@ -18,6 +18,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       required: true,
     },
+    isDisabled: {
+      type: Boolean,
+      required: true,
+    },
   },
   { timestamps: true }
 );
