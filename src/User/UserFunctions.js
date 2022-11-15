@@ -28,6 +28,7 @@ async function createUser(req, res, next) {
       email: firebaseUser.email,
       username: req.body.username,
       isAdmin: false,
+      isDisabled: false,
     }).save();
     res.status(200).json(newUser);
     next();
@@ -40,18 +41,14 @@ async function createUser(req, res, next) {
 }
 
 async function findCurrentUser(req, res, next) {
+  let firebaseUser = null;
   try {
     // The authorization header will be in the format of string "Bearer [id token]",
     // so split out the ID token from the word "Bearer"
     const token = req.headers.authorization.split(" ")[1];
 
     // verifyIdToken will decode the token's claims is the promise is successful
-    const firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
-    const user = await UserModel.findOne({ email: firebaseUser.email });
-    if (user) {
-      res.status(200).json(user);
-    }
-    next();
+    firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
   } catch (error) {
     if (error.code == "auth/id-token-revoked") {
       console.log(
@@ -62,29 +59,38 @@ async function findCurrentUser(req, res, next) {
       console.log("Error: Session token is invalid. Full error is: \n" + error);
     }
     res.status(401).json({
-      error: "Unauthorized",
+      errorMessage: "Error: Unauthorized token",
     });
   }
+
+  const user = await UserModel.findOne({ email: firebaseUser.email });
+  if (!user) {
+    // Shouldn't happen, but if the verified Firebase user doesn't exist in MongoDB...
+    res.status(404).json({
+      errorMessage:
+        "Error: Verified Firebase user not found in MongoDB database",
+    });
+  } else if (user.isDisabled) {
+    res.status(401).json({
+      errorMessage:
+        "Error: This user had been disabled by an administrator of Co Cleanup",
+    });
+  } else if (user) {
+    // All is ok, respond with the user from MongoDB
+    res.status(200).json(user);
+  }
+  next();
 }
 
 async function validateUserSession(headerToken) {
+  let firebaseUser = null;
   try {
     // The authorization header will be in the format of string "Bearer [id token]",
     // so split out the ID token from the word "Bearer"
     const token = headerToken.split(" ")[1];
 
     // verifyIdToken will decode the token's claims is the promise is successful
-    const firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
-    const user = await UserModel.findOne({ email: firebaseUser.email });
-    if (user) {
-      return true;
-    } else {
-      console.log(
-        "Error: User was not found in MongoDB. Full Firebase user object: \n" +
-          firebaseUser
-      );
-      return false;
-    }
+    firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
   } catch (error) {
     if (error.code == "auth/id-token-revoked") {
       console.log(
@@ -95,6 +101,20 @@ async function validateUserSession(headerToken) {
       console.log("Error: Session token is invalid. Full error is: \n" + error);
     }
     return false;
+  }
+
+  const user = await UserModel.findOne({ email: firebaseUser.email });
+  if (!user) {
+    // Shouldn't happen, but if the verified Firebase user doesn't exist in MongoDB...
+    console.log("Error: Verified Firebase user not found in MongoDB database");
+    return false;
+  } else if (user.isDisabled) {
+    console.log(
+      "Error: This user had been disabled by an administrator of Co Cleanup"
+    );
+    return false;
+  } else if (user) {
+    return true;
   }
 }
 
