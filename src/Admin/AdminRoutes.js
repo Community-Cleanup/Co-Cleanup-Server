@@ -60,6 +60,9 @@ router.get("/users", async (req, res) => {
 });
 
 router.put("/users/:id", async (req, res) => {
+  // Protected route: only signed in ADMIN users only should be able to update any user's MongoDB document
+  // To do that, validate the token (if it exists) from the header in our 'validateAdminUserSession' function,
+  // and if that succeeds, only then query for every (or filtered) registered user
   if (
     req.headers.authorization &&
     (await validateAdminUserSession(req.headers.authorization))
@@ -67,9 +70,9 @@ router.put("/users/:id", async (req, res) => {
     try {
       const updateUser = await UserModel.findByIdAndUpdate(req.params.id, {
         isDisabled: req.body.isDisabled,
+        isAdmin: req.body.isAdmin,
       });
       res.status(200).json(updateUser);
-      //res.status(200).json({ message: `Updated user _id: ${req.params.id}` });
     } catch (e) {
       res.json(e);
     }
