@@ -6,6 +6,7 @@
   "scripts": {
     "test": "jest --detectOpenHandles",
     "test-ci": "jest --detectOpenHandles --ci",
+    "seed-admin-user": "PORT=55000 NODE_ENV=development node ./src/Seeder/seedAdminUser.js",
     "start-production": "NODE_ENV=production node ./src/index.js",
     "start-dev-win": "PORT=55000 NODE_ENV=development nodemon -L ./src/index.js",
     "start-dev": "PORT=55000 NODE_ENV=development nodemon ./src/index.js"

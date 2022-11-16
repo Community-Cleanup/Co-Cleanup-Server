@@ -22,3 +22,5 @@ const server = app.listen(PORT, HOST, () => {
 	HOST: ${HOST}	PORT: ${PORT}
 	`);
 });
+
+module.exports = { server };
