@@ -59,4 +59,25 @@ router.get("/users", async (req, res) => {
   }
 });
 
+router.put("/users/:id", async (req, res) => {
+  if (
+    req.headers.authorization &&
+    (await validateAdminUserSession(req.headers.authorization))
+  ) {
+    try {
+      const updateUser = await UserModel.findByIdAndUpdate(req.params.id, {
+        isDisabled: req.body.isDisabled,
+      });
+      res.status(200).json(updateUser);
+      //res.status(200).json({ message: `Updated user _id: ${req.params.id}` });
+    } catch (e) {
+      res.json(e);
+    }
+  } else {
+    res.status(401).json({
+      errorMessage: "Error: Unauthorized",
+    });
+  }
+});
+
 module.exports = router;
