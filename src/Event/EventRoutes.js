@@ -30,7 +30,7 @@ router.post("/create-event", async (req, res) => {
       res.json(err);
     }
   } else {
-    res.status(401).json({ error: "Unauthorized" });
+    res.status(401).json({ errorMessage: "Error: Unauthorized" });
   }
 });
 

@@ -34,8 +34,8 @@ async function createUser(req, res, next) {
     next();
   } catch (error) {
     console.log(error);
-    return res.status(401).json({
-      error: "Unauthorized",
+    res.status(401).json({
+      errorMessage: "Error: Unauthorized token",
     });
   }
 }
@@ -52,7 +52,7 @@ async function findCurrentUser(req, res, next) {
   } catch (error) {
     if (error.code == "auth/id-token-revoked") {
       console.log(
-        "Error: You must sign in again to access this. Full error is: \n" +
+        "Error: You must sign in again to attempt to perform this operation. Full error is: \n" +
           error
       );
     } else {
@@ -94,7 +94,7 @@ async function validateUserSession(headerToken) {
   } catch (error) {
     if (error.code == "auth/id-token-revoked") {
       console.log(
-        "Error: You must sign in again to access this. Full error is: \n" +
+        "Error: You must sign in again to attempt to perform this operation. Full error is: \n" +
           error
       );
     } else {
@@ -111,6 +111,47 @@ async function validateUserSession(headerToken) {
   } else if (user.isDisabled) {
     console.log(
       "Error: This user had been disabled by an administrator of Co Cleanup"
+    );
+    return false;
+  } else if (user) {
+    return true;
+  }
+}
+
+async function validateAdminUserSession(headerToken) {
+  let firebaseUser = null;
+  try {
+    // The authorization header will be in the format of string "Bearer [id token]",
+    // so split out the ID token from the word "Bearer"
+    const token = headerToken.split(" ")[1];
+
+    // verifyIdToken will decode the token's claims is the promise is successful
+    firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
+  } catch (error) {
+    if (error.code == "auth/id-token-revoked") {
+      console.log(
+        "Error: You must sign in again to attempt to perform this operation. Full error is: \n" +
+          error
+      );
+    } else {
+      console.log("Error: Session token is invalid. Full error is: \n" + error);
+    }
+    return false;
+  }
+
+  const user = await UserModel.findOne({ email: firebaseUser.email });
+  if (!user) {
+    // Shouldn't happen, but if the verified Firebase user doesn't exist in MongoDB...
+    console.log("Error: Verified Firebase user not found in MongoDB database");
+    return false;
+  } else if (user.isDisabled) {
+    console.log(
+      "Error: This user had been disabled by an administrator of Co Cleanup"
+    );
+    return false;
+  } else if (!user.isAdmin) {
+    console.log(
+      "Error: This user does not have administrator role authorisation to perform this operation"
     );
     return false;
   } else if (user) {
@@ -225,4 +266,5 @@ module.exports = {
   // signUpUser,
   // signInUser,
   validateUserSession,
+  validateAdminUserSession,
 };
