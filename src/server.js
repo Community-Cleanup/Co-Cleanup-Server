@@ -98,6 +98,7 @@ const userRouter = require("./User/UserRoutes");
 // Using express.Router, All "users" API end-points,
 // will start from /api/users/
 // e.g.
+// GET http://localhost:55000/api/users/
 // POST http://localhost:55000/api/users/create-current-user
 // POST http://localhost:55000/api/users/find-current-user
 app.use("/api/users", userRouter);
