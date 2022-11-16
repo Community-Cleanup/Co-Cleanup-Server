@@ -31,6 +31,24 @@ router.get("/events", async (req, res) => {
   }
 });
 
+router.delete("/events/:id", async (req, res) => {
+  if (
+    req.headers.authorization &&
+    (await validateAdminUserSession(req.headers.authorization))
+  ) {
+    try {
+      const deleteEvent = await EventModel.findByIdAndDelete(req.params.id);
+      res.status(200).json(deleteEvent);
+    } catch {
+      res.json(e);
+    }
+  } else {
+    res.status(401).json({
+      errorMessage: "Error: Unauthorized",
+    });
+  }
+});
+
 router.get("/users", async (req, res) => {
   // Protected route: only signed in ADMIN users only should be able to query for every registered user
   // To do that, validate the token (if it exists) from the header in our 'validateAdminUserSession' function,
