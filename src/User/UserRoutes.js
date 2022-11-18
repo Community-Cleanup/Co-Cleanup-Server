@@ -8,6 +8,7 @@ const UserModel = require("../Database/Models/userSchema");
 const {
   createUser,
   findCurrentUser,
+  checkUsernameUniqueness,
   // signUpUser,
   // signInUser,
   // validateUserSession,
@@ -22,6 +23,7 @@ router.get("/", async (request, response) => {
   response.json({ message: "Hello /users route" });
 });
 
+router.post("/check-username-uniqueness", checkUsernameUniqueness);
 router.post("/create-current-user", createUser);
 router.post("/find-current-user", findCurrentUser);
 

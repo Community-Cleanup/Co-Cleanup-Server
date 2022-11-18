@@ -14,29 +14,52 @@ const UserModel = require("../Database/Models/userSchema");
 // Initialize the Firebase Client SDK
 //firebaseClient.initializeApp(firebaseClientConfig);
 
+async function checkUsernameUniqueness(req, res, next) {
+  const usernameToCheck = req.body.username;
+
+  UserModel.exists({ username: usernameToCheck }, function (error, result) {
+    if (error) {
+      res.json(error);
+    } else {
+      result
+        ? res.status(200).json({ usernameExists: true })
+        : res.status(200).json({ usernameExists: false });
+      next();
+    }
+  });
+}
+
 async function createUser(req, res, next) {
+  let firebaseUser = null;
   try {
     // The authorization header will be in the format of string "Bearer [id token]",
     // so split out the ID token from the word "Bearer"
     const token = req.headers.authorization.split(" ")[1];
 
     // verifyIdToken will decode the token's claims is the promise is successful
-    const firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
+    firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
 
     firebaseUser.email_verified = true;
-    let newUser = await new UserModel({
-      email: firebaseUser.email,
-      username: req.body.username,
-      isAdmin: false,
-      isDisabled: false,
-    }).save();
-    res.status(200).json(newUser);
-    next();
   } catch (error) {
     console.log(error);
     res.status(401).json({
       errorMessage: "Error: Unauthorized token",
     });
+  }
+  try {
+    if (firebaseUser) {
+      let newUser = await new UserModel({
+        email: firebaseUser.email,
+        username: req.body.username,
+        isAdmin: false,
+        isDisabled: false,
+      }).save();
+      res.status(200).json(newUser);
+      next();
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(401).json(error);
   }
 }
 
@@ -263,6 +286,7 @@ async function validateAdminUserSession(headerToken) {
 module.exports = {
   createUser,
   findCurrentUser,
+  checkUsernameUniqueness,
   // signUpUser,
   // signInUser,
   validateUserSession,
