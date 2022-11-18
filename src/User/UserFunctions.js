@@ -29,6 +29,48 @@ async function checkUsernameUniqueness(req, res, next) {
   });
 }
 
+async function updateUsername(req, res) {
+  // Protected route: only signed in users should be able to update their own username.
+  // To do that, validate the token (if it exists) from the header in our 'validateUserSession' function,
+  // and if that succeeds, only then create an event
+  if (
+    req.headers.authorization &&
+    (await validateUserSession(req.headers.authorization))
+  ) {
+    // The authorization header will be in the format of string "Bearer [id token]",
+    // so split out the ID token from the word "Bearer"
+    const token = req.headers.authorization.split(" ")[1];
+
+    // verifyIdToken will decode the token's claims is the promise is successful
+    firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
+
+    const usernameToUpdate = req.body.username;
+
+    const user = await UserModel.findOne({ email: firebaseUser.email });
+    if (!user) {
+      // Shouldn't happen, but if the verified Firebase user doesn't exist in MongoDB...
+      res.status(404).json({
+        errorMessage:
+          "Error: Verified Firebase user not found in MongoDB database",
+      });
+    }
+    user.username = usernameToUpdate;
+
+    try {
+      await user.save();
+      res.status(200).json(user);
+    } catch (error) {
+      res
+        .status(401)
+        .json({
+          errorMessage: `Error: The username '${usernameToUpdate}' is already taken, please try another`,
+        });
+    }
+  } else {
+    res.status(401).json({ errorMessage: "Error: Unauthorized" });
+  }
+}
+
 async function createUser(req, res, next) {
   let firebaseUser = null;
   try {
@@ -287,6 +329,7 @@ module.exports = {
   createUser,
   findCurrentUser,
   checkUsernameUniqueness,
+  updateUsername,
   // signUpUser,
   // signInUser,
   validateUserSession,
