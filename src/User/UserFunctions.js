@@ -14,29 +14,94 @@ const UserModel = require("../Database/Models/userSchema");
 // Initialize the Firebase Client SDK
 //firebaseClient.initializeApp(firebaseClientConfig);
 
+async function checkUsernameUniqueness(req, res, next) {
+  const usernameToCheck = req.body.username;
+
+  UserModel.exists({ username: usernameToCheck }, function (error, result) {
+    if (error) {
+      res.json(error);
+    } else {
+      result
+        ? res.status(200).json({ usernameExists: true })
+        : res.status(200).json({ usernameExists: false });
+      next();
+    }
+  });
+}
+
+async function updateUsername(req, res) {
+  // Protected route: only signed in users should be able to update their own username.
+  // To do that, validate the token (if it exists) from the header in our 'validateUserSession' function,
+  // and if that succeeds, only then create an event
+  if (
+    req.headers.authorization &&
+    (await validateUserSession(req.headers.authorization))
+  ) {
+    // The authorization header will be in the format of string "Bearer [id token]",
+    // so split out the ID token from the word "Bearer"
+    const token = req.headers.authorization.split(" ")[1];
+
+    // verifyIdToken will decode the token's claims is the promise is successful
+    firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
+
+    const usernameToUpdate = req.body.username;
+
+    const user = await UserModel.findOne({ email: firebaseUser.email });
+    if (!user) {
+      // Shouldn't happen, but if the verified Firebase user doesn't exist in MongoDB...
+      res.status(404).json({
+        errorMessage:
+          "Error: Verified Firebase user not found in MongoDB database",
+      });
+    }
+    user.username = usernameToUpdate;
+
+    try {
+      await user.save();
+      res.status(200).json(user);
+    } catch (error) {
+      res
+        .status(401)
+        .json({
+          errorMessage: `Error: The username '${usernameToUpdate}' is already taken, please try another`,
+        });
+    }
+  } else {
+    res.status(401).json({ errorMessage: "Error: Unauthorized" });
+  }
+}
+
 async function createUser(req, res, next) {
+  let firebaseUser = null;
   try {
     // The authorization header will be in the format of string "Bearer [id token]",
     // so split out the ID token from the word "Bearer"
     const token = req.headers.authorization.split(" ")[1];
 
     // verifyIdToken will decode the token's claims is the promise is successful
-    const firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
+    firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
 
     firebaseUser.email_verified = true;
-    let newUser = await new UserModel({
-      email: firebaseUser.email,
-      username: req.body.username,
-      isAdmin: false,
-      isDisabled: false,
-    }).save();
-    res.status(200).json(newUser);
-    next();
   } catch (error) {
     console.log(error);
-    return res.status(401).json({
-      error: "Unauthorized",
+    res.status(401).json({
+      errorMessage: "Error: Unauthorized token",
     });
+  }
+  try {
+    if (firebaseUser) {
+      let newUser = await new UserModel({
+        email: firebaseUser.email,
+        username: req.body.username,
+        isAdmin: false,
+        isDisabled: false,
+      }).save();
+      res.status(200).json(newUser);
+      next();
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(401).json(error);
   }
 }
 
@@ -52,7 +117,7 @@ async function findCurrentUser(req, res, next) {
   } catch (error) {
     if (error.code == "auth/id-token-revoked") {
       console.log(
-        "Error: You must sign in again to access this. Full error is: \n" +
+        "Error: You must sign in again to attempt to perform this operation. Full error is: \n" +
           error
       );
     } else {
@@ -94,7 +159,7 @@ async function validateUserSession(headerToken) {
   } catch (error) {
     if (error.code == "auth/id-token-revoked") {
       console.log(
-        "Error: You must sign in again to access this. Full error is: \n" +
+        "Error: You must sign in again to attempt to perform this operation. Full error is: \n" +
           error
       );
     } else {
@@ -111,6 +176,47 @@ async function validateUserSession(headerToken) {
   } else if (user.isDisabled) {
     console.log(
       "Error: This user had been disabled by an administrator of Co Cleanup"
+    );
+    return false;
+  } else if (user) {
+    return true;
+  }
+}
+
+async function validateAdminUserSession(headerToken) {
+  let firebaseUser = null;
+  try {
+    // The authorization header will be in the format of string "Bearer [id token]",
+    // so split out the ID token from the word "Bearer"
+    const token = headerToken.split(" ")[1];
+
+    // verifyIdToken will decode the token's claims is the promise is successful
+    firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
+  } catch (error) {
+    if (error.code == "auth/id-token-revoked") {
+      console.log(
+        "Error: You must sign in again to attempt to perform this operation. Full error is: \n" +
+          error
+      );
+    } else {
+      console.log("Error: Session token is invalid. Full error is: \n" + error);
+    }
+    return false;
+  }
+
+  const user = await UserModel.findOne({ email: firebaseUser.email });
+  if (!user) {
+    // Shouldn't happen, but if the verified Firebase user doesn't exist in MongoDB...
+    console.log("Error: Verified Firebase user not found in MongoDB database");
+    return false;
+  } else if (user.isDisabled) {
+    console.log(
+      "Error: This user had been disabled by an administrator of Co Cleanup"
+    );
+    return false;
+  } else if (!user.isAdmin) {
+    console.log(
+      "Error: This user does not have administrator role authorisation to perform this operation"
     );
     return false;
   } else if (user) {
@@ -222,7 +328,10 @@ async function validateUserSession(headerToken) {
 module.exports = {
   createUser,
   findCurrentUser,
+  checkUsernameUniqueness,
+  updateUsername,
   // signUpUser,
   // signInUser,
   validateUserSession,
+  validateAdminUserSession,
 };

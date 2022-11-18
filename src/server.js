@@ -98,13 +98,16 @@ const userRouter = require("./User/UserRoutes");
 // Using express.Router, All "users" API end-points,
 // will start from /api/users/
 // e.g.
-// POST http://localhost:55000/api/users/sign-up
-// POST http://localhost:55000/api/users/sign-in
-// POST http://localhost:55000/api/users/validate-session
+// GET http://localhost:55000/api/users/
+// POST http://localhost:55000/api/users/create-current-user
+// POST http://localhost:55000/api/users/find-current-user
 app.use("/api/users", userRouter);
 
 const eventRouter = require("./Event/EventRoutes");
 app.use("/api/events", eventRouter);
+
+const adminRouter = require("./Admin/AdminRoutes");
+app.use("/api/admin", adminRouter);
 
 // Export our 'app' Express entity/server, the associated PORT and HOST,
 // all primarily for our ./index.js to start/boot the Express server.
