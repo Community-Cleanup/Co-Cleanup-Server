@@ -32,6 +32,9 @@ router.get("/events", async (req, res) => {
 });
 
 router.delete("/events/:id", async (req, res) => {
+  // Protected route: only signed in ADMIN should be able to delete an event
+  // To do that, validate the token (if it exists) from the header in our 'validateAdminUserSession' function,
+  // and if that succeeds, only then update the event with the deleted comment
   if (
     req.headers.authorization &&
     (await validateAdminUserSession(req.headers.authorization))
@@ -46,6 +49,31 @@ router.delete("/events/:id", async (req, res) => {
     res.status(401).json({
       errorMessage: "Error: Unauthorized",
     });
+  }
+});
+
+router.put("/events/:id", async (req, res) => {
+  // Protected route: only signed in ADMIN should be able to update an event to delete a comment
+  // To do that, validate the token (if it exists) from the header in our 'validateAdminUserSession' function,
+  // and if that succeeds, only then update the event with the deleted comment
+  if (
+    req.headers.authorization &&
+    (await validateAdminUserSession(req.headers.authorization))
+  ) {
+    try {
+      const event = await EventModel.findById(req.params.id);
+
+      const comments = event.comments;
+      comments.splice(req.body.eventCommentIndex, 1);
+
+      event.comments = comments;
+      await event.save();
+      res.status(200).json(event);
+    } catch (e) {
+      res.json(e);
+    }
+  } else {
+    res.status(401).json({ errorMessage: "Error: Unauthorized" });
   }
 });
 
