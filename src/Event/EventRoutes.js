@@ -53,25 +53,49 @@ router.get("/:id", async (req, res) => {
 });
 
 router.put("/:id", async (req, res) => {
-  try {
-    const updateEvent = await EventModel.findByIdAndUpdate(req.params.id, {
-      $set: req.body,
-    });
-    // To Do
-    // This json seems to return the original document BEFORE the updated value, not AFTER the updated value,
-    // may want to look into this later (but not a big problem)
-    res.status(200).json(updateEvent);
-  } catch (e) {
-    res.json(e);
+  // Protected route: only signed in users should be able to update an event,
+  // or add/delete comments in an event.
+  // To do that, validate the token (if it exists) from the header in our 'validateUserSession' function,
+  // and if that succeeds, only then create an event
+  //
+  // Note that this validation isn't currently checking if a signed in user is only trying to update their own event or comment,
+  // so potentially a signed-in 'hacker' could pass in any valid event id (i.e. 'req.params.id') in the request to update anyones' events or comments
+  if (
+    req.headers.authorization &&
+    (await validateUserSession(req.headers.authorization))
+  ) {
+    try {
+      const updateEvent = await EventModel.findByIdAndUpdate(req.params.id, {
+        $set: req.body,
+      });
+      res.status(200).json(updateEvent);
+    } catch (e) {
+      res.json(e);
+    }
+  } else {
+    res.status(401).json({ errorMessage: "Error: Unauthorized" });
   }
 });
 
 router.delete("/:id", async (req, res) => {
-  try {
-    const deleteEvent = await EventModel.findByIdAndDelete(req.params.id);
-    res.status(200).json("Event Deleted");
-  } catch {
-    res.json(e);
+  // Protected route: only signed in users should be able to delete their own event.
+  // To do that, validate the token (if it exists) from the header in our 'validateUserSession' function,
+  // and if that succeeds, only then create an event
+  //
+  // Note that this validation isn't currently checking if a signed in user is only trying to delete their own event,
+  // so potentially a signed-in 'hacker' could pass in any valid event id (i.e.'req.params.id') in the request to delete anyones' events.
+  if (
+    req.headers.authorization &&
+    (await validateUserSession(req.headers.authorization))
+  ) {
+    try {
+      const deleteEvent = await EventModel.findByIdAndDelete(req.params.id);
+      res.status(200).json("Event Deleted");
+    } catch {
+      res.json(e);
+    }
+  } else {
+    res.status(401).json({ errorMessage: "Error: Unauthorized" });
   }
 });
 
