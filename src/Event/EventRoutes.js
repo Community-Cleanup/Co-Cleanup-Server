@@ -4,7 +4,7 @@ const EventModel = require("../Database/Models/eventSchema");
 const { validateUserSession } = require("../User/UserFunctions");
 
 router.post("/create-event", async (req, res) => {
-  // Protected route: only signed in users should be able to create an event.
+  // Protected route: only signed in (regular or admin) users should be able to create an event.
   // To do that, validate the token (if it exists) from the header in our 'validateUserSession' function,
   // and if that succeeds, only then create an event
   if (
@@ -26,11 +26,16 @@ router.post("/create-event", async (req, res) => {
       const saveEvent = await newEvent.save();
       res.status(200).json(saveEvent);
     } catch (err) {
-      console.log("An error occured:", err);
-      res.json(err);
+      const errorObject = new ResponseErrorFactory().create(503);
+      res.status(503).json({
+        errorMessage: `Error: (${errorObject.message}) Unable to query database to create event`,
+      });
     }
   } else {
-    res.status(401).json({ errorMessage: "Error: Unauthorized" });
+    const errorObject = new ResponseErrorFactory().create(403);
+    res.status(403).json({
+      errorMessage: `Error: (${errorObject.message}) Permission denied`,
+    });
   }
 });
 
@@ -38,8 +43,11 @@ router.get("/", async (req, res) => {
   try {
     const allEvents = await EventModel.find(req.query);
     res.status(200).json(allEvents);
-  } catch (e) {
-    res.json(e);
+  } catch (err) {
+    const errorObject = new ResponseErrorFactory().create(503);
+    res.status(503).json({
+      errorMessage: `Error: (${errorObject.message}) Unable to query database for events`,
+    });
   }
 });
 
@@ -47,19 +55,24 @@ router.get("/:id", async (req, res) => {
   try {
     const event = await EventModel.findById(req.params.id);
     res.status(200).json(event);
-  } catch (e) {
-    res.json(e);
+  } catch (err) {
+    const errorObject = new ResponseErrorFactory().create(503);
+    res.status(503).json({
+      errorMessage: `Error: (${errorObject.message}) Unable to query database for an event`,
+    });
   }
 });
 
 router.put("/:id", async (req, res) => {
-  // Protected route: only signed in users should be able to update an event,
+  // Protected route: only signed in (regular or admin) users should be able to update an event,
   // or add/delete comments in an event.
   // To do that, validate the token (if it exists) from the header in our 'validateUserSession' function,
   // and if that succeeds, only then create an event
   //
+  // Caution:
   // Note that this validation isn't currently checking if a signed in user is only trying to update their own event or comment,
-  // so potentially a signed-in 'hacker' could pass in any valid event id (i.e. 'req.params.id') in the request to update anyones' events or comments
+  // so for this route, potentially any signed-in malicious users could find and pass in any valid event id (i.e. 'req.params.id') in the request
+  // to update anyones' events or comments
   if (
     req.headers.authorization &&
     (await validateUserSession(req.headers.authorization))
@@ -69,11 +82,17 @@ router.put("/:id", async (req, res) => {
         $set: req.body,
       });
       res.status(200).json(updateEvent);
-    } catch (e) {
-      res.json(e);
+    } catch (err) {
+      const errorObject = new ResponseErrorFactory().create(503);
+      res.status(503).json({
+        errorMessage: `Error: (${errorObject.message}) Unable to query database to update an event`,
+      });
     }
   } else {
-    res.status(401).json({ errorMessage: "Error: Unauthorized" });
+    const errorObject = new ResponseErrorFactory().create(403);
+    res.status(403).json({
+      errorMessage: `Error: (${errorObject.message}) Permission denied`,
+    });
   }
 });
 
@@ -82,8 +101,10 @@ router.delete("/:id", async (req, res) => {
   // To do that, validate the token (if it exists) from the header in our 'validateUserSession' function,
   // and if that succeeds, only then create an event
   //
+  // Caution:
   // Note that this validation isn't currently checking if a signed in user is only trying to delete their own event,
-  // so potentially a signed-in 'hacker' could pass in any valid event id (i.e.'req.params.id') in the request to delete anyones' events.
+  // so for this route, potentially any signed-in malicious user could find and pass in any valid event id (i.e.'req.params.id') in the
+  // request to delete anyones' events.
   if (
     req.headers.authorization &&
     (await validateUserSession(req.headers.authorization))
@@ -91,11 +112,17 @@ router.delete("/:id", async (req, res) => {
     try {
       const deleteEvent = await EventModel.findByIdAndDelete(req.params.id);
       res.status(200).json("Event Deleted");
-    } catch {
-      res.json(e);
+    } catch (err) {
+      const errorObject = new ResponseErrorFactory().create(503);
+      res.status(503).json({
+        errorMessage: `Error: (${errorObject.message}) Unable to query database to delete an event`,
+      });
     }
   } else {
-    res.status(401).json({ errorMessage: "Error: Unauthorized" });
+    const errorObject = new ResponseErrorFactory().create(403);
+    res.status(403).json({
+      errorMessage: `Error: (${errorObject.message}) Permission denied`,
+    });
   }
 });
 

@@ -70,6 +70,9 @@ class ServerError extends ResponseError {
       case 500:
         this._message = "Internal Server Error";
         break;
+      case 503:
+        this._message = "Service Unavailable";
+        break;
     }
   }
 }

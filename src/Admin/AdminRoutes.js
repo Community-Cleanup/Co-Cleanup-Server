@@ -4,6 +4,8 @@ const EventModel = require("../Database/Models/eventSchema");
 
 const { validateAdminUserSession } = require("../User/UserFunctions");
 
+const ResponseErrorFactory = require("../ErrorHandling/ResponseError");
+
 router.get("/", async (req, res) => {
   // Protected route: only signed in ADMIN users only should be able to view the admin page
   // To do that, validate the token (if it exists) from the header in our 'validateAdminUserSession' function,
@@ -14,8 +16,9 @@ router.get("/", async (req, res) => {
   ) {
     res.status(200).json();
   } else {
-    res.status(401).json({
-      errorMessage: "Error: Unauthorized",
+    const errorObject = new ResponseErrorFactory().create(403);
+    res.status(403).json({
+      errorMessage: `Error: (${errorObject.message}) Permission denied`,
     });
   }
 });
@@ -26,8 +29,11 @@ router.get("/events", async (req, res) => {
     const regex = new RegExp(searchQueryFilter, "i"); // i for case insensitive
     const foundEvents = await EventModel.find({ title: { $regex: regex } });
     res.status(200).json(foundEvents);
-  } catch (e) {
-    res.json(e);
+  } catch (err) {
+    const errorObject = new ResponseErrorFactory().create(503);
+    res.status(503).json({
+      errorMessage: `Error: (${errorObject.message}) Unable to query database for events`,
+    });
   }
 });
 
@@ -42,12 +48,16 @@ router.delete("/events/:id", async (req, res) => {
     try {
       const deleteEvent = await EventModel.findByIdAndDelete(req.params.id);
       res.status(200).json(deleteEvent);
-    } catch {
-      res.json(e);
+    } catch (err) {
+      const errorObject = new ResponseErrorFactory().create(503);
+      res.status(503).json({
+        errorMessage: `Error: (${errorObject.message}) Unable to query database to delete event`,
+      });
     }
   } else {
-    res.status(401).json({
-      errorMessage: "Error: Unauthorized",
+    const errorObject = new ResponseErrorFactory().create(403);
+    res.status(403).json({
+      errorMessage: `Error: (${errorObject.message}) Permission denied`,
     });
   }
 });
@@ -69,11 +79,17 @@ router.put("/events/:id", async (req, res) => {
       event.comments = comments;
       await event.save();
       res.status(200).json(event);
-    } catch (e) {
-      res.json(e);
+    } catch (err) {
+      const errorObject = new ResponseErrorFactory().create(503);
+      res.status(503).json({
+        errorMessage: `Error: (${errorObject.message}) Unable to query database to update event`,
+      });
     }
   } else {
-    res.status(401).json({ errorMessage: "Error: Unauthorized" });
+    const errorObject = new ResponseErrorFactory().create(403);
+    res.status(403).json({
+      errorMessage: `Error: (${errorObject.message}) Permission denied`,
+    });
   }
 });
 
@@ -95,12 +111,16 @@ router.get("/users", async (req, res) => {
         $or: [{ username: { $regex: regex } }, { email: { $regex: regex } }],
       });
       res.status(200).json(foundUsers);
-    } catch (e) {
-      res.json(e);
+    } catch (err) {
+      const errorObject = new ResponseErrorFactory().create(503);
+      res.status(503).json({
+        errorMessage: `Error: (${errorObject.message}) Unable to query database for users`,
+      });
     }
   } else {
-    res.status(401).json({
-      errorMessage: "Error: Unauthorized",
+    const errorObject = new ResponseErrorFactory().create(403);
+    res.status(403).json({
+      errorMessage: `Error: (${errorObject.message}) Permission denied`,
     });
   }
 });
@@ -119,12 +139,16 @@ router.put("/users/:id", async (req, res) => {
         isAdmin: req.body.isAdmin,
       });
       res.status(200).json(updateUser);
-    } catch (e) {
-      res.json(e);
+    } catch (err) {
+      const errorObject = new ResponseErrorFactory().create(503);
+      res.status(503).json({
+        errorMessage: `Error: (${errorObject.message}) Unable to query database to update user`,
+      });
     }
   } else {
-    res.status(401).json({
-      errorMessage: "Error: Unauthorized",
+    const errorObject = new ResponseErrorFactory().create(403);
+    res.status(403).json({
+      errorMessage: `Error: (${errorObject.message}) Permission denied`,
     });
   }
 });
