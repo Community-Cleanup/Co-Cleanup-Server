@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const EventModel = require("../Database/Models/eventSchema");
 
-const { validateUserSession } = require("../User/UserFunctions");
+const { validateUserSession } = require("../User/UserValidators");
 
 router.post("/create-event", async (req, res) => {
   // Protected route: only signed in (regular or admin) users should be able to create an event.

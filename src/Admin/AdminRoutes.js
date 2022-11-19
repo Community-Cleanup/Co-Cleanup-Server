@@ -2,7 +2,7 @@ const router = require("express").Router();
 const UserModel = require("../Database/Models/userSchema");
 const EventModel = require("../Database/Models/eventSchema");
 
-const { validateAdminUserSession } = require("../User/UserFunctions");
+const { validateAdminUserSession } = require("../User/UserValidators");
 
 const ResponseErrorFactory = require("../ErrorHandling/ResponseError");
 

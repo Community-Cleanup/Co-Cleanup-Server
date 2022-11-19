@@ -10,17 +10,14 @@ const {
   findCurrentUser,
   checkUsernameUniqueness,
   updateUsername,
-} = require("./UserFunctions");
+} = require("./UserController");
 
 // The Express router provides router-level middleware so that we can
 // define middleware specifically for all routes from the /user URL in this case
 // Keeps things tidy by keeping router level functionality outside of ../index.js
 const router = express.Router();
 
-router.get("/", async (request, response) => {
-  response.json({ message: "Hello /users route" });
-});
-
+// For code tidiness, the route controller/middleware functions are contained in './UserController.js'
 router.post("/check-username-uniqueness", checkUsernameUniqueness);
 router.post("/create-current-user", createUser);
 router.post("/find-current-user", findCurrentUser);
