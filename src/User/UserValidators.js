@@ -4,22 +4,22 @@ const firebaseAdmin = require("firebase-admin");
 const UserModel = require("../Database/Models/userSchema");
 
 async function isValidUserSession(authHeader) {
-  // The authorization header will be in the format of string "Bearer [id token]",
-  // so split out the ID token from the word "Bearer"
   if (!authHeader) {
     return false;
   }
+  // The authorization header coming in from the client will be in the format of string "Bearer [id token]",
+  // so split out the ID token from this string
   const token = authHeader.split(" ")[1];
-  const result = await validateAdminUserSession(token);
+  const result = await validateUserSession(token);
   return result;
 }
 
 async function isValidAdminUserSession(authHeader) {
-  // The authorization header will be in the format of string "Bearer [id token]",
-  // so split out the ID token from the word "Bearer"
   if (!authHeader) {
     return false;
   }
+  // The authorization header coming in from the client will be in the format of string "Bearer [id token]",
+  // so split out the ID token from this string
   const token = authHeader.split(" ")[1];
   const result = await validateAdminUserSession(token);
   return result;
