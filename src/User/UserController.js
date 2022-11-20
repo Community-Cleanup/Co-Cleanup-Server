@@ -3,7 +3,7 @@ const firebaseAdmin = require("firebase-admin");
 
 const UserModel = require("../Database/Models/userSchema");
 
-const { validateUserSession } = require("../User/UserValidators");
+const { isValidUserSession } = require("../User/UserValidators");
 
 const ResponseErrorFactory = require("../ErrorHandling/ResponseError");
 
@@ -24,12 +24,9 @@ async function checkUsernameUniqueness(req, res, next) {
 
 async function updateUsername(req, res) {
   // Protected route: only signed in users should be able to update their own username.
-  // To do that, validate the token (if it exists) from the header in our 'validateUserSession' function,
+  // To do that, validate the token (if it exists) from the header in our 'isValidUserSession' function,
   // and if that succeeds, only then create an event
-  if (
-    req.headers.authorization &&
-    (await validateUserSession(req.headers.authorization))
-  ) {
+  if (await isValidUserSession(req.headers.authorization)) {
     // The authorization header will be in the format of string "Bearer [id token]",
     // so split out the ID token from the word "Bearer"
     const token = req.headers.authorization.split(" ")[1];

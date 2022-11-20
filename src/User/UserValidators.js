@@ -3,13 +3,31 @@ const firebaseAdmin = require("firebase-admin");
 
 const UserModel = require("../Database/Models/userSchema");
 
-async function validateUserSession(headerToken) {
+async function isValidUserSession(authHeader) {
+  // The authorization header will be in the format of string "Bearer [id token]",
+  // so split out the ID token from the word "Bearer"
+  if (!authHeader) {
+    return false;
+  }
+  const token = authHeader.split(" ")[1];
+  const result = await validateAdminUserSession(token);
+  return result;
+}
+
+async function isValidAdminUserSession(authHeader) {
+  // The authorization header will be in the format of string "Bearer [id token]",
+  // so split out the ID token from the word "Bearer"
+  if (!authHeader) {
+    return false;
+  }
+  const token = authHeader.split(" ")[1];
+  const result = await validateAdminUserSession(token);
+  return result;
+}
+
+async function validateUserSession(token) {
   let firebaseUser = null;
   try {
-    // The authorization header will be in the format of string "Bearer [id token]",
-    // so split out the ID token from the word "Bearer"
-    const token = headerToken.split(" ")[1];
-
     // verifyIdToken will decode the token's claims is the promise is successful
     firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
   } catch (error) {
@@ -29,19 +47,14 @@ async function validateUserSession(headerToken) {
   }
 }
 
-async function validateAdminUserSession(headerToken) {
+async function validateAdminUserSession(token) {
   let firebaseUser = null;
   try {
-    // The authorization header will be in the format of string "Bearer [id token]",
-    // so split out the ID token from the word "Bearer"
-    const token = headerToken.split(" ")[1];
-
     // verifyIdToken will decode the token's claims is the promise is successful
     firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
   } catch (error) {
     return false;
   }
-
   const user = await UserModel.findOne({ email: firebaseUser.email });
   if (!user) {
     // Shouldn't happen, but this will raise if there is a de-sync issue where the verified Firebase user doesn't exist in MongoDB...
@@ -58,4 +71,7 @@ async function validateAdminUserSession(headerToken) {
   }
 }
 
-module.exports = { validateUserSession, validateAdminUserSession };
+module.exports = {
+  isValidUserSession,
+  isValidAdminUserSession,
+};
