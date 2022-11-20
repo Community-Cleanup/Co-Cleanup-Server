@@ -22,7 +22,7 @@ async function checkUsernameUniqueness(req, res, next) {
       res.json(error);
     } else {
       result
-        ? res.status(200).json({ usernameExists: true })
+        ? res.status(200).json({ usernameExists: true }) // Normally I would return an error response, but I don't know what would be an appropriate HTTP code
         : res.status(200).json({ usernameExists: false });
       next();
     }
