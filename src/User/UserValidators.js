@@ -1,8 +1,12 @@
-// The Admin SDK is a set of server libraries that let you interact with Firebase from root level environments
+// The Firebase Auth Admin SDK is a set of server libraries that let us interact with Firebase Auth with root/admin level security privileges
+// based off the private credentials in our private env file
 const firebaseAdmin = require("firebase-admin");
 
+// Our Mongoose User model schema
 const UserModel = require("../Database/Models/userSchema");
 
+// For use by any protected routes in this whole API, this will verify that
+// the user is signed in before attempted to do a particular CRUD operation on a protected route
 async function isValidUserSession(authHeader) {
   if (!authHeader) {
     return false;
@@ -14,6 +18,9 @@ async function isValidUserSession(authHeader) {
   return result;
 }
 
+// For use by any protected routes in this whole API, this will verify that
+// the user is both signed in, AND HAS THE ADMININSTRATOR ROLE, before attempted to do a particular CRUD operation
+// on a protected admin-only route
 async function isValidAdminUserSession(authHeader) {
   if (!authHeader) {
     return false;
@@ -28,7 +35,8 @@ async function isValidAdminUserSession(authHeader) {
 async function validateUserSession(token) {
   let firebaseUser = null;
   try {
-    // verifyIdToken will decode the token's claims is the promise is successful
+    // verifyIdToken will decode the token's claims if the promise is successful
+    // we just need the decoded user's email address from the token to compare against MongoDB
     firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
   } catch (error) {
     return false;
@@ -42,7 +50,7 @@ async function validateUserSession(token) {
     // User has been disabled by an administrator of the app
     return false;
   } else if (user) {
-    // Else user session is valid and their account isn't disabled, so return true
+    // So finally only return true if the user is signed in and is not disabled
     return true;
   }
 }
@@ -50,7 +58,8 @@ async function validateUserSession(token) {
 async function validateAdminUserSession(token) {
   let firebaseUser = null;
   try {
-    // verifyIdToken will decode the token's claims is the promise is successful
+    // verifyIdToken will decode the token's claims if the promise is successful
+    // we just need the decoded user's email address from the token to compare against MongoDB
     firebaseUser = await firebaseAdmin.auth().verifyIdToken(token);
   } catch (error) {
     return false;
@@ -66,7 +75,7 @@ async function validateAdminUserSession(token) {
     // The user does not have the administrator role
     return false;
   } else if (user) {
-    // Else user's session is valid, and their account isn't disabled, and they have the administrator role, so return true
+    // So finally only return true if the user is signed in, and is not disabled, and has the administrator role
     return true;
   }
 }

@@ -1,15 +1,15 @@
+// These custom error classes are used to help ensure consistency in error responses,
+// namely error messages, in any middleware error responses, depending on the HTTP status code
+
 // Base/parent error response class
+// Our ResponseErrorFactory class below should hopefully never need to instantiate this base class directly
 class ResponseError {
   constructor(status) {
-    // if (new.target === ResponseError) {
-    //   throw new TypeError(
-    //     "Cannot construct instances of base/abstract class directly"
-    //   );
-    // }
     this._message = "Unknown or Unhandled Error Occured";
     this._status = status || 500;
   }
 
+  // Simply capitalises the first letter of every word in a string
   _capitalizeStringWords(message) {
     return message
       .toLowerCase()
@@ -18,25 +18,10 @@ class ResponseError {
       .join(" ");
   }
 
+  // Read-only return the error message from the instance object
   get message() {
     return this._capitalizeStringWords(this._message);
   }
-
-  //   set message(newMessage) {
-  //     if (newMessage) {
-  //       this._message = newMessage;
-  //     }
-  //   }
-
-  //   get status() {
-  //     return this._status;
-  //   }
-
-  //   set status(newStatus) {
-  //     if (newStatus) {
-  //       this._status = newStatus;
-  //     }
-  //   }
 }
 
 // For all 4xx errors that our app uses
@@ -78,7 +63,9 @@ class ServerError extends ResponseError {
 }
 
 // Using OOP factory design pattern, return a new response error handler object depending on
-// the status code range that the status code falls into
+// the status code range that the status code falls into.
+// This ensures good Dependency Injection.
+// Return an instance of our base error class by default.
 class ResponseErrorFactory {
   create(status) {
     if (status >= 500 && status <= 599) {

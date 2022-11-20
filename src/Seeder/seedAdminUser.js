@@ -1,3 +1,23 @@
+// This script can be executed when needed to seed a default user account into Co Cleanup that will automatically have the administrator user role
+// for Co Cleanup
+// Because, of course, Co Cleanup app needs at least one administrator user account for that account to be able to assign other users the admin role
+
+// Steps to run:
+// 1. Populate your private env file with the following details, replacing the respective values:
+//
+//    FIREBASE_ADMIN_PROJECT_ID="project ID"
+//    FIREBASE_ADMIN_PRIVATE_KEY="Firebase private key"
+//    FIREBASE_ADMIN_CLIENT_EMAIL="Firebase client email"
+//    DATABASE_URI="MongoDB connection string"
+//    SEED_ADMIN_USER_USERNAME="The username of your admin user"
+//    SEED_ADMIN_USER_EMAIL="The email address of your admin user"
+//    SEED_ADMIN_USER_PASSWORD="The plain text password of your admin user"
+//
+//  Note that the chosen seed user email and password values must still conform to Firebase requirements (e.g. password min. 6 characters, etc.)
+//
+// 2. From a Linux/Mac terminal, CD to the root level of this project directory, and enter the following command:
+// `npm run seed-admin-user` (without the quotes)
+
 const { server } = require("../index");
 
 const firebaseAdmin = require("firebase-admin");

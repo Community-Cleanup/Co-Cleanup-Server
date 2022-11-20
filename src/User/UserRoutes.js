@@ -1,10 +1,6 @@
-// This code has been modified from Alex Holder's MERN Masterclass presented to Coder Academy on the 17th October, 2022
-// Link Alex's Masterclass tutorial is: https://github.com/AlexHolderDeveloper/expressjs-class-oct-22
 const express = require("express");
 
-const UserModel = require("../Database/Models/userSchema");
-
-// functions imported from ./UserFunctions.js
+// controller functions imported from ./UserController.js
 const {
   createUser,
   findCurrentUser,
@@ -13,7 +9,7 @@ const {
 } = require("./UserController");
 
 // The Express router provides router-level middleware so that we can
-// define middleware specifically for all routes from the /user URL in this case
+// define middleware (i.e. controllers) specifically for all routes from the /user URL in this case
 // Keeps things tidy by keeping router level functionality outside of ../index.js
 const router = express.Router();
 

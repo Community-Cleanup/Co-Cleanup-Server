@@ -1,11 +1,14 @@
 const router = require("express").Router();
+// Our Mongoose Event model schema
 const EventModel = require("../Database/Models/eventSchema");
 
+// Used for "protected" routes, this will be used to validate the current user's session, if it exists
 const { isValidUserSession } = require("../User/UserValidators");
 
+// PROTECTED ROUTE:
+// only signed in users (regular or admin users) should be able to create an event.
 router.post("/create-event", async (req, res) => {
-  // Protected route: only signed in (regular or admin) users should be able to create an event.
-  // To do that, validate the token (if it exists) from the header in our 'isValidUserSession' function,
+  // To protect this route, validate the token (if it exists) from the header in our 'isValidUserSession' function,
   // and if that succeeds, only then create an event
   if (await isValidUserSession(req.headers.authorization)) {
     try {
@@ -36,6 +39,7 @@ router.post("/create-event", async (req, res) => {
   }
 });
 
+// Retrieve all events
 router.get("/", async (req, res) => {
   try {
     const allEvents = await EventModel.find(req.query);
@@ -48,6 +52,7 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Retrieve event by its unique ID in params
 router.get("/:id", async (req, res) => {
   try {
     const event = await EventModel.findById(req.params.id);
@@ -60,16 +65,17 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// PROTECTED ROUTE:
+// only signed in (regular or admin) users should be able to update an event, or add comments in an event,
+// or delete only their own comments in an event
 router.put("/:id", async (req, res) => {
-  // Protected route: only signed in (regular or admin) users should be able to update an event,
-  // or add/delete comments in an event.
-  // To do that, validate the token (if it exists) from the header in our 'isValidUserSession' function,
+  // To protect this route, validate the token (if it exists) from the header in our 'isValidUserSession' function,
   // and if that succeeds, only then create an event
   //
-  // Caution:
+  // CAUTION (for a future fix):
   // Note that this validation isn't currently checking if a signed in user is only trying to update their own event or comment,
-  // so for this route, potentially any signed-in malicious users could find and pass in any valid event id (i.e. 'req.params.id') in the request
-  // to update anyones' events or comments
+  // so for this route, potentially any signed-in malicious users could discover and pass in any valid event id (i.e. 'req.params.id')
+  // directly in this PUT request to update anyones' events or comments.
   if (await isValidUserSession(req.headers.authorization)) {
     try {
       const updateEvent = await EventModel.findByIdAndUpdate(req.params.id, {
@@ -90,15 +96,16 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+// PROTECTED ROUTE:
+// only signed in users should be able to delete their own event.
 router.delete("/:id", async (req, res) => {
-  // Protected route: only signed in users should be able to delete their own event.
-  // To do that, validate the token (if it exists) from the header in our 'isValidUserSession' function,
+  // To protect this route, validate the token (if it exists) from the header in our 'isValidUserSession' function,
   // and if that succeeds, only then create an event
   //
-  // Caution:
-  // Note that this validation isn't currently checking if a signed in user is only trying to delete their own event,
-  // so for this route, potentially any signed-in malicious user could find and pass in any valid event id (i.e.'req.params.id') in the
-  // request to delete anyones' events.
+  // CAUTION (for a future fix):
+  // Note that this validation isn't currently checking if a signed in user is only trying to update their own event or comment,
+  // so for this route, potentially any signed-in malicious users could discover and pass in any valid event id (i.e. 'req.params.id')
+  // directly in this DELETE request to delete anyones' events or comments.
   if (await isValidUserSession(req.headers.authorization)) {
     try {
       const deleteEvent = await EventModel.findByIdAndDelete(req.params.id);
