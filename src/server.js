@@ -46,8 +46,9 @@ app.use(express.urlencoded({ extended: true }));
 var corsOptions = {
   origin: [
     "http://localhost:3000",
-    "https://cocleanup.netlify.app",
-    "https://cocleanup.social",
+    "https://cocleanup.netlify.app", // Original Netlify production deployment
+    "https://cocleanupsocial.netlify.app", // New Netlify production deployment
+    "https://cocleanup.social", // Production domain
   ],
   optionsSuccessStatus: 200,
 };
