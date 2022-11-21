@@ -45,7 +45,7 @@ app.use(express.urlencoded({ extended: true }));
 // In our case, both our localhost (dev) ReactJS client, and our production deployed ReactJS app.
 var corsOptions = {
   origin: [
-    "http://localhost:3000",
+    "http://localhost:3000", // Development React client address
     "https://cocleanup.netlify.app", // Original Netlify production deployment
     "https://cocleanupsocial.netlify.app", // New Netlify production deployment
     "https://cocleanup.social", // Production domain
