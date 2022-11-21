@@ -2,7 +2,7 @@
 // Link Alex's Masterclass tutorial is: https://github.com/AlexHolderDeveloper/expressjs-class-oct-22
 var { app, PORT, HOST } = require("./server");
 
-// index.js is used as the entry point to start the express server
+// index.js is used as the entry point to start/"boot" the express server
 // and provide the PORT & HOST to listen on
 
 // "app.listen" is seperated in index.js from the rest of the server config & setup which is in ./server.js.
@@ -17,7 +17,7 @@ const server = app.listen(PORT, HOST, () => {
 
   console.log(`
 	Express JS server is now running on the following environment:
-    NODE_ENV: ${NODE_ENV}
+  NODE_ENV: ${NODE_ENV}
 	Server address mapping is:
 	HOST: ${HOST}	PORT: ${PORT}
 	`);
