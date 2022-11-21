@@ -44,7 +44,11 @@ app.use(express.urlencoded({ extended: true }));
 // that will be the only client origins allowed to access this server
 // In our case, both our localhost (dev) ReactJS client, and our production deployed ReactJS app.
 var corsOptions = {
-  origin: ["http://localhost:3000", "https://cocleanup.netlify.app"],
+  origin: [
+    "http://localhost:3000",
+    "https://cocleanup.netlify.app",
+    "https://cocleanup.social",
+  ],
   optionsSuccessStatus: 200,
 };
 // Apply the CORS middleware to all incoming requests
