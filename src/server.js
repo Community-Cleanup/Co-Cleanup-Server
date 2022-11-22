@@ -1,5 +1,6 @@
 // This code has been modified from Alex Holder's MERN Masterclass presented to Coder Academy on the 17th October, 2022
 // Link Alex's Masterclass tutorial is: https://github.com/AlexHolderDeveloper/expressjs-class-oct-22
+
 const express = require("express");
 // 'app' will hold the Express application as an entity
 const app = express();
@@ -8,6 +9,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 
 // Set values for the server's address
+// Note that PORT 0 and HOST IP address 0.0.0.0 are likened to wildcards to allow any hosting domain
 const PORT = process.env.PORT || 0;
 const HOST = "0.0.0.0";
 
@@ -42,7 +44,12 @@ app.use(express.urlencoded({ extended: true }));
 // that will be the only client origins allowed to access this server
 // In our case, both our localhost (dev) ReactJS client, and our production deployed ReactJS app.
 var corsOptions = {
-  origin: ["http://localhost:3000", "https://cocleanup.netlify.app"],
+  origin: [
+    "http://localhost:3000", // Development React client address
+    "https://cocleanup.netlify.app", // Original Netlify production deployment
+    "https://cocleanupsocial.netlify.app", // New Netlify production deployment
+    "https://cocleanup.social", // Production domain
+  ],
   optionsSuccessStatus: 200,
 };
 // Apply the CORS middleware to all incoming requests
@@ -51,12 +58,12 @@ app.use(cors(corsOptions));
 // Load up the .env file and store its values into process.env
 require("dotenv").config();
 
-// Establish Firebase and give it valid admin credentials
+// Establish Firebase Auth Admin SDK instance and give it valid admin credentials from our private env file
 const firebaseAdmin = require("firebase-admin");
 firebaseAdmin.initializeApp({
   credential: firebaseAdmin.credential.cert({
     projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
-    privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY.replace(/\\n/g, "\n"), // Remove breaking line-breaks
+    privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY.replace(/\\n/g, "\n"), // Some regex to remove app breaking line-breaks
     clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
   }),
 });
@@ -65,7 +72,8 @@ firebaseAdmin.initializeApp({
 const { databaseConnector } = require("./database");
 // If we're not in test mode, start connecting to the database.
 if (process.env.NODE_ENV != "test") {
-  // Establish what the database URL is going to be
+  // Establish what the database URL is going to be,
+  // with a default pointing to a local development MongoDB instance
   const DATABASE_URI =
     process.env.DATABASE_URI || "mongodb://localhost:27017/CoCleanup";
   // Connect to the database using the URL
@@ -81,26 +89,25 @@ if (process.env.NODE_ENV != "test") {
     });
 }
 
-// The server's home route
+// Our server's home root,
 // Useful for checking that the server is running as expected in local and deployed environments
 // This "/" route is just for our testing purposes only
 app.get("/", (req, res) => {
-  console.log("ExpressJS API homepage received a request.");
-
-  const target = process.env.NODE_ENV || "not yet set";
+  const target = process.env.NODE_ENV || "Error: Environment not set";
 
   res.json({
-    message: `Hello ${target} world!`,
+    message: `Co Cleanup server is running on environment: ${target}.`,
   });
 });
 
-const userRouter = require("./User/UserRoutes");
-// Using express.Router, All "users" API end-points,
-// will start from /api/users/
+// Using express.Router, all of our API resources and their CRUD end-points will be beginning with the URL /api
 // e.g.
-// GET http://localhost:55000/api/users/
-// POST http://localhost:55000/api/users/create-current-user
-// POST http://localhost:55000/api/users/find-current-user
+// http://localhost:55000/api/users/
+// http://localhost:55000/api/events/
+// http://localhost:55000/api/admin/
+// Please refer to the corresponding router-level middleware functions
+
+const userRouter = require("./User/UserRoutes");
 app.use("/api/users", userRouter);
 
 const eventRouter = require("./Event/EventRoutes");
@@ -111,7 +118,7 @@ app.use("/api/admin", adminRouter);
 
 // Export our 'app' Express entity/server, the associated PORT and HOST,
 // all primarily for our ./index.js to start/boot the Express server.
-// Segregation of Express server config into this file will allow for simpler Jest testing.
+// Segregation of Express server config into this file will allow for simpler Jest testing when needed.
 module.exports = {
   app,
   PORT,

@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
 
+// Schema to create a model on Mongoose to hold details of Co Cleanup registered users and their disabled and admin status
+// Note that this model is independent of Firebase Auth and as such MongoDB will not store any Firebase auth/id tokens or passwords
+
 const userSchema = new mongoose.Schema(
   {
     username: {
