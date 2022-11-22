@@ -4,7 +4,7 @@
 ### MERN full-stack app <!-- omit in toc -->
 ### Coder Academy <!-- omit in toc -->
 ### T3A2 (Part A) Assignment <!-- omit in toc -->
-#### Due Date: 24th Nov 2022 <!-- omit in toc -->
+#### Due Date: 23rd Nov 2022 <!-- omit in toc -->
 
 ---
 
